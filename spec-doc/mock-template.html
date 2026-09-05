@@ -1,0 +1,284 @@
+<!doctype html>
+<!--
+  モックHTMLの雛形。単一ファイル完結（外部CSS/JS/フォント/画像に依存しない）。
+  使い方:
+    1. <title> と .topbar h1 を対象名に変える
+    2. screenIds 配列と nav のリンクを、03-spec.md の画面IDに揃える
+    3. <section id="SCR-xx"> を画面の数だけ用意する（IDは03と完全一致させる）
+    4. 使わないほうの雛形（Web画面 / ターミナル画面）は消す
+  やらないこと: API通信・永続化・本物のバリデーション・実データ。
+-->
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{プロジェクト名} モック</title>
+<style>
+  :root {
+    --gray-0: #ffffff;
+    --gray-1: #f4f4f4;
+    --gray-2: #e0e0e0;
+    --gray-3: #bdbdbd;
+    --gray-4: #9e9e9e;
+    --gray-5: #616161;
+    --gray-6: #212121;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    background: var(--gray-1);
+    color: var(--gray-6);
+  }
+
+  /* ---- 上部ナビ（全画面共通） ---- */
+  header.topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--gray-6); color: var(--gray-0);
+    padding: 10px 16px;
+  }
+  header.topbar h1 {
+    font-size: 14px; margin: 0 0 8px 0;
+    font-weight: normal; color: var(--gray-3);
+  }
+  nav.screen-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+  nav.screen-nav .group-label {
+    font-size: 11px; color: var(--gray-4);
+    align-self: center; margin-right: 2px;
+  }
+  nav.screen-nav a {
+    display: inline-block; padding: 4px 8px; font-size: 12px;
+    border: 1px solid var(--gray-5); color: var(--gray-2);
+    text-decoration: none; border-radius: 3px; white-space: nowrap;
+  }
+  nav.screen-nav a.active {
+    background: var(--gray-0); color: var(--gray-6); font-weight: bold;
+  }
+
+  /* ---- 画面の器（max-width は対象に合わせて変える） ---- */
+  main { max-width: 480px; margin: 24px auto; padding: 0 16px 64px; }
+  section.screen {
+    display: none;
+    background: var(--gray-0);
+    border: 1px solid var(--gray-3);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  section.screen.active { display: block; }
+  .screen-head {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--gray-2);
+    background: var(--gray-1);
+  }
+  .screen-head .id { font-size: 11px; color: var(--gray-4); }
+  .screen-head .title { font-size: 15px; font-weight: bold; }
+  .screen-body { padding: 14px; }
+
+  /* ---- Web画面用のパーツ ---- */
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; color: var(--gray-5); margin-bottom: 4px; }
+  .field input[type="text"], .field input[type="password"], .field textarea {
+    width: 100%; padding: 8px; border: 1px solid var(--gray-3);
+    border-radius: 3px; font-size: 13px; background: var(--gray-1);
+  }
+  .field textarea { min-height: 80px; resize: vertical; }
+  .btn {
+    display: inline-block; padding: 8px 14px;
+    border: 1px solid var(--gray-6); background: var(--gray-6);
+    color: var(--gray-0); border-radius: 3px; font-size: 13px;
+    cursor: pointer; text-decoration: none;
+  }
+  .btn.secondary { background: var(--gray-0); color: var(--gray-6); border-color: var(--gray-3); }
+  .btn.block { display: block; width: 100%; text-align: center; }
+  .btn:disabled { background: var(--gray-3); border-color: var(--gray-3); cursor: not-allowed; }
+  .link { color: var(--gray-5); font-size: 12px; text-decoration: underline; cursor: pointer; }
+  .card {
+    border: 1px solid var(--gray-2); border-radius: 3px;
+    padding: 10px; margin-bottom: 8px; background: var(--gray-1);
+  }
+  .card .meta { font-size: 11px; color: var(--gray-4); }
+  .card .body { font-size: 13px; margin-top: 4px; }
+  table.list { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.list th, table.list td {
+    border-bottom: 1px solid var(--gray-2); padding: 8px 6px; text-align: left;
+  }
+  table.list th { font-size: 11px; color: var(--gray-5); font-weight: normal; }
+
+  /* エラー・空状態（03の「エラー・例外表示」を目で確認するための枠） */
+  .error { display: none; font-size: 12px; color: var(--gray-6); margin-top: 6px; }
+  .error.show { display: block; }
+  .empty {
+    display: none; text-align: center; color: var(--gray-5);
+    font-size: 13px; padding: 20px 0;
+  }
+  .empty.show { display: block; }
+  .note {
+    font-size: 11px; color: var(--gray-4);
+    border-top: 1px dashed var(--gray-2); margin-top: 12px; padding-top: 8px;
+  }
+
+  /* ---- ターミナル画面用のパーツ（CLI対象のときだけ使う） ---- */
+  .terminal {
+    background: var(--gray-6); color: var(--gray-2);
+    font-family: "SFMono-Regular", "Consolas", "Menlo", monospace;
+    font-size: 12px; line-height: 1.7;
+    padding: 14px; white-space: pre-wrap; word-break: break-all;
+  }
+  .terminal .prompt { color: var(--gray-0); }
+  .terminal .dim { color: var(--gray-4); }
+  .terminal .warn { color: var(--gray-3); text-decoration: underline; }
+  .terminal .cursor {
+    display: inline-block; width: 7px; height: 14px;
+    background: var(--gray-2); vertical-align: -2px;
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>{プロジェクト名} — 画面モック（ワイヤーフレーム / ダミーデータ）</h1>
+  <nav class="screen-nav" id="screen-nav">
+    <span class="group-label">{区分1}</span>
+    <a href="#SCR-01" data-scr="SCR-01">SCR-01 {画面名}</a>
+    <a href="#SCR-02" data-scr="SCR-02">SCR-02 {画面名}</a>
+    <span class="group-label">{区分2}</span>
+    <a href="#SCR-03" data-scr="SCR-03">SCR-03 {画面名}</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ============ Web画面の雛形 ============ -->
+  <section class="screen" id="SCR-01">
+    <div class="screen-head">
+      <div class="id">SCR-01</div>
+      <div class="title">{画面名}</div>
+    </div>
+    <div class="screen-body">
+
+      <div class="field">
+        <label for="scr01-keyword">{入力欄のラベル}</label>
+        <input type="text" id="scr01-keyword" placeholder="{プレースホルダ}" oninput="filterScr01()" />
+      </div>
+
+      <table class="list" id="scr01-list">
+        <thead><tr><th>{列1}</th><th>{列2}</th><th></th></tr></thead>
+        <tbody>
+          <tr data-kw="ダミー1"><td>{ダミー値}</td><td>{ダミー値}</td><td><span class="link" onclick="location.hash='#SCR-02'">編集</span></td></tr>
+          <tr data-kw="ダミー2"><td>{ダミー値}</td><td>{ダミー値}</td><td><span class="link" onclick="location.hash='#SCR-02'">編集</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="empty" id="scr01-empty">{0件のときの文言}</div>
+
+      <div class="note">対応機能: FUNC-01</div>
+    </div>
+  </section>
+
+  <!-- ============ 入力・保存画面の雛形 ============ -->
+  <section class="screen" id="SCR-02">
+    <div class="screen-head">
+      <div class="id">SCR-02</div>
+      <div class="title">{画面名}</div>
+    </div>
+    <div class="screen-body">
+
+      <div class="field">
+        <label for="scr02-title">{必須項目のラベル}</label>
+        <input type="text" id="scr02-title" />
+      </div>
+      <div class="field">
+        <label for="scr02-body">{本文のラベル}</label>
+        <textarea id="scr02-body"></textarea>
+      </div>
+
+      <button class="btn" onclick="saveScr02()">保存</button>
+      <button class="btn secondary" onclick="location.hash='#SCR-01'">キャンセル</button>
+      <div class="error" id="scr02-error">{必須未入力のときの文言}</div>
+
+      <div class="note">対応機能: FUNC-02</div>
+    </div>
+  </section>
+
+  <!-- ============ ターミナル画面の雛形（CLI対象のときだけ使う） ============ -->
+  <section class="screen" id="SCR-03">
+    <div class="screen-head">
+      <div class="id">SCR-03</div>
+      <div class="title">{画面名}</div>
+    </div>
+    <div class="terminal">
+<span class="dim">$</span> <span class="prompt">{実行コマンド}</span>
+
+{ヘッダ行: アプリ名 / 対象パス}
+<span class="dim">─────────────────────────────</span>
+  [1/3] {項目名}  <span class="dim">✓ 完了</span>
+  [2/3] {項目名}  <span class="dim">… 処理中</span>
+  [3/3] {項目名}  <span class="dim">待機中</span>
+<span class="warn">[警告] {警告の文言}</span>
+
+{確認プロンプトの文言} (y/n) <span class="cursor"></span>
+    </div>
+    <div class="screen-body">
+      <div class="note">対応機能: FUNC-03</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // 画面IDは 03-spec.md の画面一覧と完全に一致させる
+  const screenIds = ["SCR-01", "SCR-02", "SCR-03"];
+
+  function showScreen(id) {
+    if (!screenIds.includes(id)) id = screenIds[0];
+    screenIds.forEach(function (sid) {
+      const el = document.getElementById(sid);
+      if (el) el.classList.toggle("active", sid === id);
+    });
+    document.querySelectorAll("#screen-nav a").forEach(function (a) {
+      a.classList.toggle("active", a.dataset.scr === id);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function currentIdFromHash() {
+    return (location.hash || "#" + screenIds[0]).replace("#", "");
+  }
+
+  window.addEventListener("hashchange", function () {
+    showScreen(currentIdFromHash());
+  });
+
+  showScreen(currentIdFromHash());
+
+  // ---- 以下は画面ごとの表示デモ。DOM操作だけで書く（API通信・永続化はしない） ----
+
+  // SCR-01: 絞り込みと0件表示
+  function filterScr01() {
+    const kw = document.getElementById("scr01-keyword").value.trim();
+    const rows = document.querySelectorAll("#scr01-list tbody tr");
+    let visible = 0;
+    rows.forEach(function (row) {
+      const match = !kw || row.textContent.includes(kw);
+      row.style.display = match ? "" : "none";
+      if (match) visible++;
+    });
+    document.getElementById("scr01-empty").classList.toggle("show", visible === 0);
+  }
+
+  // SCR-02: 必須未入力のエラー表示
+  function saveScr02() {
+    const title = document.getElementById("scr02-title").value.trim();
+    const body = document.getElementById("scr02-body").value.trim();
+    const error = document.getElementById("scr02-error");
+    if (!title || !body) {
+      error.classList.add("show");
+      return;
+    }
+    error.classList.remove("show");
+    location.hash = "#SCR-01";
+  }
+</script>
+
+</body>
+</html>
