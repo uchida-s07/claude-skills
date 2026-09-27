@@ -67,7 +67,7 @@ A の6文書を毎回そろえる重さをなくすためのスキル群。要�
 
 ```
 【プロジェクト開始】 /spec-setup → /product-vision →（既存なら）/product-requirements init
-【変更ごと（M/L）】  /spec-new → spec-review（関門）→ 承認 → /spec-plan → 実装（テストを先に）→ /spec-close → spec-verify（関門）→ 常設要件へ移す → spec-check
+【変更ごと（M/L）】  /spec-new → spec-review（関門）→ 承認 → /spec-plan → 実装（AC ごとに テスト → Red → 実装 → リファクタ）→ /spec-close → spec-verify（関門）→ 常設要件へ移す → spec-check
 【変更ごと（S）】    修正 →（振る舞いが変わったら）/product-requirements update
 【手動】             docs-review all（リリース前、久しぶりに戻ったとき）
 ```
