@@ -10,3 +10,6 @@ desktop.ini
 *.tmp
 *.bak
 *.log
+
+# Claude アプリが同期するスキル（このリポジトリの管理外）
+synced/
